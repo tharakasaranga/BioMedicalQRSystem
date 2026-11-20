@@ -9,7 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "html5-qrcode": "^2.3.8",
+    "jose": "^6.2.18",
+    "lucide-react": "^1.77.0",
+    "mongoose": "^9.12.2",
     "next": "16.4.6",
+    "qrcode.react": "^4.2.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

@@ -19,6 +19,13 @@ export async function POST(req) {
       return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
     }
 
+    
+    if (!user.isApproved) {
+      return NextResponse.json(
+        { message: "Your account is pending approval from the Super Admin." },
+        { status: 403 }
+      );
+    }
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const token = await new SignJWT({
@@ -36,7 +43,6 @@ export async function POST(req) {
       user: { name: user.name, email: user.email, role: user.role },
     });
 
-    
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

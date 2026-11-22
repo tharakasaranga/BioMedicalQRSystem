@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
 import { ArrowLeft, Plus, QrCode, Printer, Download, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function StockManagementPage() {
   const [equipments, setEquipments] = useState([]);
@@ -65,8 +66,9 @@ export default function StockManagementPage() {
       setFormData((prev) => ({ ...prev, [type]: data.setting.value }));
       resetFn("");
       closeFn(false);
+      toast.success(`${type === "category" ? "Category" : "Department"} added successfully`);
     } else {
-      alert(data.message);
+      toast.error(data.message || "Could not add the setting");
     }
   };
 
@@ -74,7 +76,7 @@ export default function StockManagementPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.category || !formData.department) {
-      alert("Please select or add both Category and Department.");
+      toast.error("Please select or add both Category and Department.");
       return;
     }
     setLoading(true);
@@ -99,8 +101,9 @@ export default function StockManagementPage() {
       });
       await fetchData();
       setSelectedQR(data.equipment); // Add කරපු ගමන් QR එක පෙන්නනවා
+      toast.success("Equipment saved and QR generated");
     } else {
-      alert(data.message);
+      toast.error(data.message || "Could not save the equipment");
     }
   };
 

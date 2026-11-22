@@ -20,11 +20,11 @@ export default function AllEquipmentsAnalyticsPage() {
       });
   }, []);
 
-  // Analytics Calculations
-  const totalDevices = equipments.length;
-  const operationalCount = equipments.filter((e) => e.status === "Operational").length;
-  const maintenanceCount = equipments.filter((e) => e.status === "Under Maintenance").length;
-  const outOfOrderCount = equipments.filter((e) => e.status === "Out of Order").length;
+  // Exact Unit-Based Analytics Calculations
+  const totalUnits = equipments.reduce((sum, e) => sum + (e.quantity || 1), 0);
+  const operationalUnits = equipments.reduce((sum, e) => sum + (e.operationalQty ?? (e.quantity || 1)), 0);
+  const maintenanceUnits = equipments.reduce((sum, e) => sum + (e.maintenanceQty || 0), 0);
+  const outOfOrderUnits = equipments.reduce((sum, e) => sum + (e.outOfOrderQty || 0), 0);
 
   const activeFaults = faults.filter((f) => f.status !== "Resolved");
   const highPriorityCount = activeFaults.filter((f) => f.priority === "High").length;
@@ -33,7 +33,6 @@ export default function AllEquipmentsAnalyticsPage() {
 
   const getPercentage = (count, total) => (total === 0 ? 0 : Math.round((count / total) * 100));
 
-  // Filtered Equipment List
   const filteredEquipments = equipments.filter((eq) => {
     const matchesSearch =
       eq.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,24 +53,24 @@ export default function AllEquipmentsAnalyticsPage() {
 
         <h1 className="text-2xl font-bold text-slate-800">Equipment Status & Visual Analytics Dashboard</h1>
 
-        {/* 1. Top KPI Summary Cards */}
+        {/* 1. Top KPI Summary Cards (Exact Unit Counts) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase">
-              <span>Total Devices</span>
+              <span>Total Stock Units</span>
               <Activity size={18} className="text-blue-600" />
             </div>
-            <p className="text-3xl font-extrabold text-slate-800 mt-2">{totalDevices}</p>
-            <p className="text-xs text-slate-400 mt-1">Registered biomedical assets</p>
+            <p className="text-3xl font-extrabold text-slate-800 mt-2">{totalUnits}</p>
+            <p className="text-xs text-slate-400 mt-1">Across {equipments.length} device types</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex items-center justify-between text-emerald-600 text-xs font-bold uppercase">
-              <span>Operational</span>
+              <span>Operational Units</span>
               <CheckCircle size={18} />
             </div>
-            <p className="text-3xl font-extrabold text-emerald-700 mt-2">{operationalCount}</p>
-            <p className="text-xs text-slate-400 mt-1">{getPercentage(operationalCount, totalDevices)}% readiness rate</p>
+            <p className="text-3xl font-extrabold text-emerald-700 mt-2">{operationalUnits}</p>
+            <p className="text-xs text-slate-400 mt-1">{getPercentage(operationalUnits, totalUnits)}% readiness rate</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -79,71 +78,69 @@ export default function AllEquipmentsAnalyticsPage() {
               <span>Under Maintenance</span>
               <AlertTriangle size={18} />
             </div>
-            <p className="text-3xl font-extrabold text-amber-600 mt-2">{maintenanceCount}</p>
-            <p className="text-xs text-slate-400 mt-1">Active repair or inspection</p>
+            <p className="text-3xl font-extrabold text-amber-600 mt-2">{maintenanceUnits}</p>
+            <p className="text-xs text-slate-400 mt-1">Units in active repair</p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex items-center justify-between text-red-600 text-xs font-bold uppercase">
-              <span>Out of Order</span>
+              <span>Out of Order Units</span>
               <XCircle size={18} />
             </div>
-            <p className="text-3xl font-extrabold text-red-600 mt-2">{outOfOrderCount}</p>
+            <p className="text-3xl font-extrabold text-red-600 mt-2">{outOfOrderUnits}</p>
             <p className="text-xs text-slate-400 mt-1">{highPriorityCount} High-priority alerts</p>
           </div>
         </div>
 
         {/* 2. Visual Analytics Charts Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Chart A: Equipment Health Distribution */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 className="text-base font-bold text-slate-800 mb-4">Equipment Status Distribution</h2>
+            <h2 className="text-base font-bold text-slate-800 mb-4">Stock Unit Health Distribution</h2>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-emerald-700">Operational ({operationalCount})</span>
-                  <span>{getPercentage(operationalCount, totalDevices)}%</span>
+                  <span className="text-emerald-700">Operational ({operationalUnits} units)</span>
+                  <span>{getPercentage(operationalUnits, totalUnits)}%</span>
                 </div>
                 <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                   <div
                     className="bg-emerald-500 h-full rounded-full transition-all"
-                    style={{ width: `${getPercentage(operationalCount, totalDevices)}%` }}
+                    style={{ width: `${getPercentage(operationalUnits, totalUnits)}%` }}
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-amber-700">Under Maintenance ({maintenanceCount})</span>
-                  <span>{getPercentage(maintenanceCount, totalDevices)}%</span>
+                  <span className="text-amber-700">Under Maintenance ({maintenanceUnits} units)</span>
+                  <span>{getPercentage(maintenanceUnits, totalUnits)}%</span>
                 </div>
                 <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                   <div
                     className="bg-amber-500 h-full rounded-full transition-all"
-                    style={{ width: `${getPercentage(maintenanceCount, totalDevices)}%` }}
+                    style={{ width: `${getPercentage(maintenanceUnits, totalUnits)}%` }}
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-red-700">Out of Order ({outOfOrderCount})</span>
-                  <span>{getPercentage(outOfOrderCount, totalDevices)}%</span>
+                  <span className="text-red-700">Out of Order ({outOfOrderUnits} units)</span>
+                  <span>{getPercentage(outOfOrderUnits, totalUnits)}%</span>
                 </div>
                 <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                   <div
                     className="bg-red-500 h-full rounded-full transition-all"
-                    style={{ width: `${getPercentage(outOfOrderCount, totalDevices)}%` }}
+                    style={{ width: `${getPercentage(outOfOrderUnits, totalUnits)}%` }}
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Chart B: Active Faults by Priority */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <h2 className="text-base font-bold text-slate-800 mb-4">
-              Active Faults by Priority ({activeFaults.length} Open)
+              Active Fault Reports by Priority ({activeFaults.length} Open)
             </h2>
             <div className="space-y-4">
               <div>
@@ -188,7 +185,7 @@ export default function AllEquipmentsAnalyticsPage() {
           </div>
         </div>
 
-        {/* 3. Equipment Directory Table */}
+        {/* 3. Equipment Directory Table with Unit Breakdown */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
             <h2 className="text-lg font-bold text-slate-800">All Biomedical Equipments</h2>
@@ -225,41 +222,48 @@ export default function AllEquipmentsAnalyticsPage() {
                   <th className="py-3 px-2">Asset ID</th>
                   <th className="py-3 px-2">Equipment Name</th>
                   <th className="py-3 px-2">Department</th>
-                  <th className="py-3 px-2">Category</th>
-                  <th className="py-3 px-2">Status</th>
+                  <th className="py-3 px-2">Stock Breakdown</th>
                   <th className="py-3 px-2 text-right">History & Report</th>
                 </tr>
               </thead>
               <tbody className="divide-y text-sm">
-                {filteredEquipments.map((eq) => (
-                  <tr key={eq._id} className="hover:bg-slate-50">
-                    <td className="py-3 px-2 font-mono font-semibold text-blue-700">{eq.assetId}</td>
-                    <td className="py-3 px-2 font-medium text-slate-800">{eq.name}</td>
-                    <td className="py-3 px-2 text-slate-600">{eq.department}</td>
-                    <td className="py-3 px-2 text-slate-500">{eq.category}</td>
-                    <td className="py-3 px-2">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          eq.status === "Operational"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : eq.status === "Under Maintenance"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {eq.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 text-right">
-                      <Link
-                        href={`/equipment/${eq.assetId}`}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:underline text-xs font-semibold"
-                      >
-                        Open <ExternalLink size={13} />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {filteredEquipments.map((eq) => {
+                  const tot = eq.quantity || 1;
+                  const op = eq.operationalQty ?? tot;
+                  const maint = eq.maintenanceQty || 0;
+                  const out = eq.outOfOrderQty || 0;
+
+                  return (
+                    <tr key={eq._id} className="hover:bg-slate-50">
+                      <td className="py-3 px-2 font-mono font-semibold text-blue-700">{eq.assetId}</td>
+                      <td className="py-3 px-2">
+                        <div className="font-medium text-slate-800">{eq.name}</div>
+                        <div className="text-xs text-slate-400">{eq.category}</div>
+                      </td>
+                      <td className="py-3 px-2 text-slate-600">{eq.department}</td>
+                      <td className="py-3 px-2">
+                        <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700">Total: {tot}</span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">OK: {op}</span>
+                          {maint > 0 && (
+                            <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-700">Maint: {maint}</span>
+                          )}
+                          {out > 0 && (
+                            <span className="px-2 py-0.5 rounded bg-red-100 text-red-700">Out: {out}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <Link
+                          href={`/equipment/${eq.assetId}`}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:underline text-xs font-semibold"
+                        >
+                          Open <ExternalLink size={13} />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Fault from "@/models/Fault";
 import Equipment from "@/models/Equipment";
+import { calculateEquipmentStock } from "@/lib/equipmentStock";
 
 export async function PATCH(req, { params }) {
   try {
@@ -9,35 +10,29 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
     const { status, technicianNotes } = await req.json();
 
-    const updatedFault = await Fault.findByIdAndUpdate(
-      id,
-      { status, technicianNotes },
-      { new: true }
-    );
-
-    if (!updatedFault) {
+    const existingFault = await Fault.findById(id);
+    if (!existingFault) {
       return NextResponse.json({ message: "Fault not found" }, { status: 404 });
     }
 
-    if (status === "Resolved") {
-      const remainingFaults = await Fault.countDocuments({
-        equipment: updatedFault.equipment,
+    existingFault.status = status;
+    existingFault.technicianNotes = technicianNotes;
+    await existingFault.save();
+
+    const equipment = await Equipment.findById(existingFault.equipment);
+    if (equipment) {
+      const activeFaults = await Fault.find({
+        equipment: equipment._id,
         status: { $ne: "Resolved" },
       });
-
-      if (remainingFaults === 0) {
-        await Equipment.findByIdAndUpdate(updatedFault.equipment, {
-          status: "Operational",
-          lastMaintenanceDate: new Date(),
-        });
+      Object.assign(equipment, calculateEquipmentStock(equipment, activeFaults));
+      if (status === "Resolved") {
+        equipment.lastMaintenanceDate = new Date();
       }
-    } else if (status === "In Progress") {
-      await Equipment.findByIdAndUpdate(updatedFault.equipment, {
-        status: "Under Maintenance",
-      });
+      await equipment.save();
     }
 
-    return NextResponse.json({ message: "Fault updated", fault: updatedFault });
+    return NextResponse.json({ message: "Fault updated", fault: existingFault });
   } catch (error) {
     return NextResponse.json({ message: "Failed to update fault", error: error.message }, { status: 500 });
   }

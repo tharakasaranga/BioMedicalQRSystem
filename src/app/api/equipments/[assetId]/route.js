@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Equipment from "@/models/Equipment";
 import Fault from "@/models/Fault";
-import User from "@/models/User"; 
+import { calculateEquipmentStock } from "@/lib/equipmentStock";
 
 export async function GET(req, { params }) {
   try {
@@ -19,7 +19,11 @@ export async function GET(req, { params }) {
       .populate("reportedBy", "name role")
       .sort({ createdAt: -1 });
 
-    return NextResponse.json({ equipment, faults });
+    const stock = calculateEquipmentStock(equipment, faults);
+    return NextResponse.json({
+      equipment: { ...equipment.toObject(), ...stock },
+      faults,
+    });
   } catch (error) {
     return NextResponse.json({ message: "Error fetching equipment details", error: error.message }, { status: 500 });
   }

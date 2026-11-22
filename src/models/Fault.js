@@ -12,9 +12,11 @@ const FaultSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    faultyQuantity: { type: Number, required: true, default: 1 }, 
     issueDescription: { type: String, required: true },
-    isCriticalEquipment: { type: Boolean, default: false }, 
-    deviceStoppedWorking: { type: Boolean, default: false }, 
+    isCriticalEquipment: { type: Boolean, default: false },
+    deviceStoppedWorking: { type: Boolean, default: false },
+    isMinorCosmetic: { type: Boolean, default: false },
     priority: {
       type: String,
       enum: ["High", "Medium", "Low"],

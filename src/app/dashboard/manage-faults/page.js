@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Wrench, CheckCircle2, Clock, AlertCircle, Save } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ManageFaultsPage() {
   const [faults, setFaults] = useState([]);
@@ -46,8 +47,9 @@ export default function ManageFaultsPage() {
     if (res.ok) {
       setEditingId(null);
       fetchFaults();
+      toast.success("Maintenance status updated");
     } else {
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     }
   };
 
